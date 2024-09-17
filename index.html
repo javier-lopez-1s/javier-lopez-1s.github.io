@@ -210,8 +210,6 @@
 
     /* CesiumJS */
 
-    // Your access token can be found at: https://ion.cesium.com/tokens.
-    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3MDJiNTdhMi1kZmUxLTQ2ZmUtYWIzMS1hNTMxM2I0YWI1YzgiLCJpZCI6MjMxMzg0LCJpYXQiOjE3MjIyNDcwOTF9.ULmXLrYoc16aD-MgxDpLWPnAZDWzZaEdPlxiWN6Ky-s';
     let origin;
     let destination;
     let heightExaggeration;
@@ -273,11 +271,15 @@
       profileViewer.camera.switchToOrthographicFrustum();
     }
 
-    const osm = new Cesium.OpenStreetMapImageryProvider({
-      url : 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/'
+    // const osm = new Cesium.OpenStreetMapImageryProvider({
+    //   url : 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/'
+    // });
+    const darkMatter = new Cesium.UrlTemplateImageryProvider({
+      url : 'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png',
+      credit : 'Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL.'
     });
-    mapViewer.imageryLayers.addImageryProvider(osm);
-    profileViewer.imageryLayers.addImageryProvider(osm);
+    mapViewer.imageryLayers.addImageryProvider(darkMatter);
+    profileViewer.imageryLayers.addImageryProvider(darkMatter);
 
     mapViewer.scene.screenSpaceCameraController.enableTilt = false;
 
