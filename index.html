@@ -23,7 +23,7 @@
 
     #resizer {
       flex: 0 0 var(--resizer-size);
-      background-color: whitesmoke;
+      background-color: #303336;
       background-repeat: no-repeat;
       background-position: center;
     }
@@ -149,7 +149,7 @@
     }
 
     function getDestination(origin, bearing, distance) {
-      // Given a start point, initial bearing, and distance, this will calculate the destina­tion point travelling along a (shortest distance) great circle arc.
+      // Given a start point, initial bearing, and distance, this will calculate the destination point travelling along a (shortest distance) great circle arc.
       const lon1 = origin.longitude;
       const lat1 = origin.latitude;
       const R = (Cesium.Ellipsoid.WGS84.maximumRadius + Cesium.Ellipsoid.WGS84.minimumRadius) / 2;
@@ -190,7 +190,7 @@
 
     if (layout === "horizontal") {
       parentContainer.style.flexDirection = "row";
-      resizer.style.backgroundImage = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='30'><path d='M2 0 v30 M5 0 v30 M8 0 v30' fill='none' stroke='black'/></svg>\")";
+      resizer.style.backgroundImage = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='30'><path d='M2 0 v30 M5 0 v30 M8 0 v30' fill='none' stroke='whitesmoke'/></svg>\")";
       resizer.style.cursor = "ew-resize";
       mapViewContainer.style.width = "calc(50% - 0.5 * var(--resizer-size))";
       mapViewContainer.style.height = "100%";
@@ -199,7 +199,7 @@
       profileViewContainer.style.height = "100%";
     } else {
       parentContainer.style.flexDirection = "column";
-      resizer.style.backgroundImage = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='30' height='10'><path d='M0 2 h30 M0 5 h30 M0 8 h30' fill='none' stroke='black'/></svg>\")";
+      resizer.style.backgroundImage = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='30' height='10'><path d='M0 2 h30 M0 5 h30 M0 8 h30' fill='none' stroke='whitesmoke'/></svg>\")";
       resizer.style.cursor = "ns-resize";
       mapViewContainer.style.width = "100%";
       mapViewContainer.style.height = "calc(60% - 0.5 * var(--resizer-size))";
@@ -210,6 +210,8 @@
 
     /* CesiumJS */
 
+    // Your access token can be found at: https://ion.cesium.com/tokens.
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3MDJiNTdhMi1kZmUxLTQ2ZmUtYWIzMS1hNTMxM2I0YWI1YzgiLCJpZCI6MjMxMzg0LCJpYXQiOjE3MjIyNDcwOTF9.ULmXLrYoc16aD-MgxDpLWPnAZDWzZaEdPlxiWN6Ky-s';
     let origin;
     let destination;
     let heightExaggeration;
@@ -219,6 +221,7 @@
     if (target === "copenhagen") {
       heightExaggeration = (layout === "horizontal") ? 4.5 : 2.4;
     }
+    const blue = Cesium.Color.fromCssColorString('#0056B8');
 
     const state = {
       ArrowUp: false,
@@ -274,12 +277,12 @@
     // const osm = new Cesium.OpenStreetMapImageryProvider({
     //   url : 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/'
     // });
-    const darkMatter = new Cesium.UrlTemplateImageryProvider({
-      url : 'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png',
+    const positron = new Cesium.UrlTemplateImageryProvider({
+      url : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
       credit : 'Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL.'
     });
-    mapViewer.imageryLayers.addImageryProvider(darkMatter);
-    profileViewer.imageryLayers.addImageryProvider(darkMatter);
+    mapViewer.imageryLayers.addImageryProvider(positron);
+    profileViewer.imageryLayers.addImageryProvider(positron);
 
     mapViewer.scene.screenSpaceCameraController.enableTilt = false;
     mapViewer.scene.screenSpaceCameraController.enableLook = false;
@@ -289,6 +292,8 @@
     profileViewer.scene.screenSpaceCameraController.enableZoom = false;
     profileViewer.scene.screenSpaceCameraController.enableTilt = false;
     profileViewer.scene.screenSpaceCameraController.enableLook = false;
+
+    profileViewer.scene.backgroundColor = Cesium.Color.WHITESMOKE;
 
 
     mapViewer.entities.suspendEvents();
@@ -301,38 +306,62 @@
     );
 
     flightData.forEach((p, i) => {
-      if ([106, 112, 122, 138, 154, 504, 519, 564, 571, 575].includes(i)) return;
-      mapViewer.entities.add({
-        id: i,
-        description: `${p.longitude}, ${p.latitude}`,
-        position: Cesium.Cartesian3.fromDegrees(p.longitude, p.latitude),
-        point: { pixelSize: 8, color: Cesium.Color.RED }
-      });
-      profileViewer.entities.add({
-        id: i,
-        description: `${p.longitude}, ${p.latitude}, ${p.height}`,
-        position: Cesium.Cartesian3.fromDegrees(p.longitude, p.latitude, (i <= 97 || i >= 577) ? 0 : p.height * heightExaggeration),
-        point: { pixelSize: 8, color: Cesium.Color.RED }
-      });
+      // if ([106, 112, 122, 138, 154, 504, 519, 564, 571, 575].includes(i)) return;
+      // mapViewer.entities.add({
+      //   id: i,
+      //   description: `${p.longitude}, ${p.latitude}`,
+      //   position: Cesium.Cartesian3.fromDegrees(p.longitude, p.latitude),
+      //   point: { pixelSize: 8, color: Cesium.Color.RED }
+      // });
+      // profileViewer.entities.add({
+      //   id: i,
+      //   description: `${p.longitude}, ${p.latitude}, ${p.height}`,
+      //   position: Cesium.Cartesian3.fromDegrees(p.longitude, p.latitude, (i <= 97 || i >= 577) ? 0 : p.height * heightExaggeration),
+      //   point: { pixelSize: 8, color: Cesium.Color.RED }
+      // });
     });
 
     mapViewer.entities.add({
       description: "Flight path",
       polyline: {
-        positions: flightData.map(p => Cesium.Cartesian3.fromDegrees(p.longitude, p.latitude)),
-        material: Cesium.Color.RED,
-        width: 1
+        positions: flightData.slice(89).map(p => Cesium.Cartesian3.fromDegrees(p.longitude, p.latitude)),
+        material: blue,
+        width: 2.5
       }
     });
+
+
+    const sfoPath = [
+      { longitude: -121.56262, latitude: 38.43660, height: 7650 }, // 6488.97
+      { longitude: -122.28344, latitude: 37.91011, height: 3089.54 },
+      { longitude: -122.50723, latitude: 37.74465, height: 1283.25 },
+      { longitude: -122.52550, latitude: 37.70298, height: 1115.52 },
+      { longitude: -122.49505, latitude: 37.66933, height: 1020 },
+      { longitude: -122.44357, latitude: 37.64859, height: 582.21 },
+      { longitude: -122.39309, latitude: 37.62628, height: 0 }
+    ];
+
+    // profileViewer.entities.add({
+    //   description: "Flight path",
+    //   polyline: {
+    //     positions: flightData.map((p, i) => Cesium.Cartesian3.fromDegrees(p.longitude, p.latitude, (i <= 97 || i >= 577) ? 0 : p.height * heightExaggeration)),
+    //     material: Cesium.Color.RED,
+    //     width: 1
+    //   }
+    // });
+
+
 
     profileViewer.entities.add({
       description: "Flight path",
       polyline: {
-        positions: flightData.map((p, i) => Cesium.Cartesian3.fromDegrees(p.longitude, p.latitude, (i <= 97 || i >= 577) ? 0 : p.height * heightExaggeration)),
-        material: Cesium.Color.RED,
-        width: 1
+        arcType: Cesium.ArcType.NONE,
+        positions: sfoPath.map((p, i) => Cesium.Cartesian3.fromDegrees(p.longitude, p.latitude, p.height * heightExaggeration)),
+        material: blue,
+        width: 3.2
       }
     });
+
 
     /* Runways */
 
@@ -345,12 +374,25 @@
           new Cesium.Cartesian3(-2707581.7057767888, -4273301.265669364, 3871371.958517215),
           new Cesium.Cartesian3(-2707540.182066177, -4273288.632313941, 3871414.6563823665)
         ],
-        material: Cesium.Color.CYAN.withAlpha(0.25)
+        material: Cesium.Color.PURPLE.withAlpha(0.25)
       }
     };
-
+    const sfoRunway3D = {
+      name: "Runway (SFO)",
+      polygon: {
+        hierarchy: [
+          new Cesium.Cartesian3(-2709603.310439514, -4270810.75573398, 3872696.6692829663),
+          new Cesium.Cartesian3(-2709644.955485991, -4270823.266612127, 3872654.0215897034),
+          new Cesium.Cartesian3(-2707581.7057767888, -4273301.265669364, 3871371.958517215),
+          new Cesium.Cartesian3(-2707540.182066177, -4273288.632313941, 3871414.6563823665)
+        ],
+        material: Cesium.Color.PURPLE,
+        height: -30,
+        extrudedHeight: 60
+      }
+    };
     mapViewer.entities.add(sfoRunway);
-    profileViewer.entities.add(sfoRunway);
+    profileViewer.entities.add(sfoRunway3D);
 
     const cphRunway = {
       name: "Runway (CPH)",
@@ -361,7 +403,7 @@
           new Cesium.Cartesian3(3521478.1566089303, 791489.6352828705, 5241015.664019977),
           new Cesium.Cartesian3(3521494.167663821, 791527.0232654496, 5240999.369416052)
         ],
-        material: Cesium.Color.CYAN.withAlpha(0.25)
+        material: Cesium.Color.PURPLE.withAlpha(0.25)
       }
     }
 
@@ -412,7 +454,7 @@
           new Cesium.Cartesian3(-2714143.76148828, -4266152.212080948, 3874638.2635467057),
           new Cesium.Cartesian3(-2713116.459217673, -4265846.688825203, 3875686.9145580647)
         ],
-        material: Cesium.Color.YELLOW.withAlpha(0.25)
+        material:blue.withAlpha(0.25)
       }
     });
 
@@ -424,17 +466,17 @@
         material: Cesium.Color.TRANSPARENT,
         height: 0.0,
         outline: true,
-        outlineColor: Cesium.Color.WHITE
+        outlineColor: blue
       },
     });
 
     /* Altitude icons - MAP VIEW - San Francisco (SFO) */
 
     mapViewer.entities.add({
-      id: "154",
+      id: "#154",
       position: Cesium.Cartesian3.fromDegrees(-121.56262, 38.4366),
       billboard: {
-        image: "icons/IAF2.png",
+        image: "icons/IAF.png",
         width: 32,
         height: 32,
       },
@@ -443,18 +485,18 @@
         font: "14pt monospace",
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineColor: blue,
+        outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
       }
     });
 
     mapViewer.entities.add({
-      id: "138",
+      id: "#138",
       position: Cesium.Cartesian3.fromDegrees(-122.28344, 37.91011),
       billboard: {
-        image: "icons/IAF2.png",
+        image: "icons/IAF.png",
         width: 32,
         height: 32,
       },
@@ -463,18 +505,18 @@
         font: "14pt monospace",
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineColor: blue,
+        outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
       }
     });
 
     mapViewer.entities.add({
-      id: "122",
+      id: "#122",
       position: Cesium.Cartesian3.fromDegrees(-122.51643, 37.73744),
       billboard: {
-        image: "icons/IAF2.png",
+        image: "icons/IAF.png",
         width: 32,
         height: 32,
       },
@@ -483,18 +525,18 @@
         font: "14pt monospace",
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineColor: blue,
+        outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
       }
     });
 
     mapViewer.entities.add({
-      id: "112",
+      id: "#112",
       position: Cesium.Cartesian3.fromDegrees(-122.49505, 37.66933),
       billboard: {
-        image: "icons/IF2.png",
+        image: "icons/IF.png",
         width: 32,
         height: 32,
       },
@@ -503,18 +545,18 @@
         font: "14pt monospace",
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineColor: blue,
+        outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
       }
     });
 
     mapViewer.entities.add({
-      id: "106",
+      id: "#106",
       position: Cesium.Cartesian3.fromDegrees(-122.44357, 37.64859),
       billboard: {
-        image: "icons/FAF2.png",
+        image: "icons/FAF.png",
         width: 32,
         height: 32,
       },
@@ -523,8 +565,8 @@
         font: "14pt monospace",
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineColor: blue,
+        outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
       }
@@ -533,7 +575,7 @@
     mapViewer.entities.add({
       position: Cesium.Cartesian3.fromRadians(-2.1358374720218096, 0.6565661920320791),
       billboard: {
-        image: "icons/VOR-DME2.png",
+        image: "icons/VOR-DME.png",
         width: 40,
         height: 40,
       }
@@ -546,8 +588,11 @@
       billboard: {
         image: Cesium.writeTextToCanvas('\u{1F808} 143°', {
           font: '14pt monospace',
+          fill: true,
+          fillColor: Cesium.Color.WHITE,
           stroke: true,
-          strokeWidth: 2,
+          strokeColor: blue,
+          strokeWidth: 4,
           padding: 5
         }), 
         rotation: Cesium.Math.toRadians(42),
@@ -561,8 +606,11 @@
       billboard: {
         image: Cesium.writeTextToCanvas('358° \u{1F80A}', {
           font: '14pt monospace',
+          fill: true,
+          fillColor: Cesium.Color.WHITE,
           stroke: true,
-          strokeWidth: 2,
+          strokeColor: blue,
+          strokeWidth: 4,
           padding: 5
         }), 
         rotation: Cesium.Math.toRadians(-30),
@@ -576,8 +624,11 @@
       billboard: {
         image: Cesium.writeTextToCanvas('358° \u{1F80A}', {
           font: '14pt monospace',
+          fill: true,
+          fillColor: Cesium.Color.WHITE,
           stroke: true,
-          strokeWidth: 2,
+          strokeColor: blue,
+          strokeWidth: 4,
           padding: 5
         }), 
         rotation: Cesium.Math.toRadians(-30),
@@ -601,7 +652,7 @@
         length: Cesium.Cartesian3.distance(origin, destination),
         topRadius: 10,
         bottomRadius: 1000,
-        material: Cesium.Color.YELLOW.withAlpha(0.25)
+        material: Cesium.Color.YELLOW.withAlpha(0.2)
       }
     });
 
@@ -618,17 +669,17 @@
         length: Cesium.Cartesian3.distance(origin, destination),
         topRadius: 150,
         bottomRadius: 700,
-        material: Cesium.Color.YELLOW.withAlpha(0.25)
+        material: Cesium.Color.YELLOW.withAlpha(0.2)
       }
     });
 
     /* Altitude icons - PROFILE VIEW - San Francisco (SFO) */
 
     profileViewer.entities.add({
-      id: "154",
-      position: Cesium.Cartesian3.fromDegrees(-121.56262, 38.4366, 6488.97 * heightExaggeration),
+      id: "#154",
+      position: Cesium.Cartesian3.fromDegrees(-121.56262, 38.4366, 7650 * heightExaggeration),
       billboard: {
-        image: "icons/IAF2.png",
+        image: "icons/IAF.png",
         width: 32,
         height: 32,
       },
@@ -637,8 +688,8 @@
         font: "14pt monospace",
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineColor: blue,
+        outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
       }
@@ -648,21 +699,21 @@
       polyline: {
         positions: [
           Cesium.Cartesian3.fromDegrees(-121.56262, 38.4366),
-          Cesium.Cartesian3.fromDegrees(-121.56262, 38.4366, 6488.97 * heightExaggeration),
+          Cesium.Cartesian3.fromDegrees(-121.56262, 38.4366, 7650 * heightExaggeration),
         ],
         material: new Cesium.PolylineDashMaterialProperty({
-          color: Cesium.Color.WHITE,
+          color: blue,
           dashLength: 8.0,
         }),
-        width: 1
+        width: 2
       }
     });
 
     profileViewer.entities.add({
-      id: "138",
+      id: "#138",
       position: Cesium.Cartesian3.fromDegrees(-122.28344, 37.91011, 3089.54 * heightExaggeration),
       billboard: {
-        image: "icons/IAF2.png",
+        image: "icons/IAF.png",
         width: 32,
         height: 32,
       },
@@ -671,8 +722,8 @@
         font: "14pt monospace",
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineColor: blue,
+        outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
       }
@@ -685,18 +736,18 @@
           Cesium.Cartesian3.fromDegrees(-122.28344, 37.91011, 3089.54 * heightExaggeration),
         ],
         material: new Cesium.PolylineDashMaterialProperty({
-          color: Cesium.Color.WHITE,
+          color: blue,
           dashLength: 8.0,
         }),
-        width: 1
+        width: 2
       }
     });
 
     profileViewer.entities.add({
-      id: "122",
+      id: "#122",
       position: Cesium.Cartesian3.fromDegrees(-122.51643, 37.73744, 1245.12 * heightExaggeration),
       billboard: {
-        image: "icons/IAF2.png",
+        image: "icons/IAF.png",
         width: 32,
         height: 32,
       },
@@ -705,8 +756,8 @@
         font: "14pt monospace",
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineColor: blue,
+        outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
       }
@@ -719,18 +770,18 @@
           Cesium.Cartesian3.fromDegrees(-122.51643, 37.73744, 1245.12 * heightExaggeration),
         ],
         material: new Cesium.PolylineDashMaterialProperty({
-          color: Cesium.Color.WHITE,
+          color: blue,
           dashLength: 8.0,
         }),
-        width: 1
+        width: 2
       }
     });
 
     profileViewer.entities.add({
-      id: "112",
-      position: Cesium.Cartesian3.fromDegrees(-122.49505, 37.66933, 970.77 * heightExaggeration),
+      id: "#112",
+      position: Cesium.Cartesian3.fromDegrees(-122.49505, 37.66933, 1020 * heightExaggeration),
       billboard: {
-        image: "icons/IF2.png",
+        image: "icons/IF.png",
         width: 32,
         height: 32,
       },
@@ -739,8 +790,8 @@
         font: "14pt monospace",
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineColor: blue,
+        outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
       }
@@ -750,21 +801,21 @@
       polyline: {
         positions: [
           Cesium.Cartesian3.fromDegrees(-122.49505, 37.66933),
-          Cesium.Cartesian3.fromDegrees(-122.49505, 37.66933, 970.77 * heightExaggeration),
+          Cesium.Cartesian3.fromDegrees(-122.49505, 37.66933, 1020 * heightExaggeration),
         ],
         material: new Cesium.PolylineDashMaterialProperty({
-          color: Cesium.Color.WHITE,
+          color: blue,
           dashLength: 8.0,
         }),
-        width: 1
+        width: 2
       }
     });
 
     profileViewer.entities.add({
-      id: "106",
+      id: "#106",
       position: Cesium.Cartesian3.fromDegrees(-122.44357, 37.64859, 582.21 * heightExaggeration),
       billboard: {
-        image: "icons/FAF2.png",
+        image: "icons/FAF.png",
         width: 32,
         height: 32,
       },
@@ -773,8 +824,8 @@
         font: "14pt monospace",
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineColor: blue,
+        outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
       }
@@ -787,11 +838,53 @@
           Cesium.Cartesian3.fromDegrees(-122.44357, 37.64859, 582.21 * heightExaggeration),
         ],
         material: new Cesium.PolylineDashMaterialProperty({
-          color: Cesium.Color.WHITE,
+          color: blue,
           dashLength: 8.0,
         }),
-        width: 1
+        width: 2
       }
+    });
+
+    profileViewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(-122.44357, 37.64859),
+      label: {
+        text: "D4",
+        font: "14pt monospace",
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: blue,
+        outlineWidth: 5,
+        verticalOrigin: Cesium.VerticalOrigin.TOP,
+        pixelOffset: new Cesium.Cartesian2(0, 8),
+      },
+    });
+
+    profileViewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(-122.49505, 37.66933),
+      label: {
+        text: "D7.3",
+        font: "14pt monospace",
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: blue,
+        outlineWidth: 5,
+        verticalOrigin: Cesium.VerticalOrigin.TOP,
+        pixelOffset: new Cesium.Cartesian2(0, 8),
+      },
+    });
+
+    profileViewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(-122.51643, 37.73744),
+      label: {
+        text: "D10.3",
+        font: "14pt monospace",
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: blue,
+        outlineWidth: 5,
+        verticalOrigin: Cesium.VerticalOrigin.TOP,
+        pixelOffset: new Cesium.Cartesian2(0, 8),
+      },
     });
 
     /* Angle icons - PROFILE VIEW - San Francisco (SFO) */
@@ -801,8 +894,11 @@
       billboard: {
         image: Cesium.writeTextToCanvas('\u{1F808} 143°', {
           font: '14pt monospace',
+          fill: true,
+          fillColor: Cesium.Color.WHITE,
           stroke: true,
-          strokeWidth: 2,
+          strokeColor: blue,
+          strokeWidth: 4,
           padding: 5
         }), 
         rotation: Cesium.Math.toRadians(15),
@@ -816,8 +912,11 @@
       billboard: {
         image: Cesium.writeTextToCanvas('358° \u{1F80A}', {
           font: '14pt monospace',
+          fill: true,
+          fillColor: Cesium.Color.WHITE,
           stroke: true,
-          strokeWidth: 2,
+          strokeColor: blue,
+          strokeWidth: 4,
           padding: 5
         }), 
         rotation: Cesium.Math.toRadians(-15),
@@ -831,8 +930,11 @@
       billboard: {
         image: Cesium.writeTextToCanvas('358° \u{1F80A}', {
           font: '14pt monospace',
+          fill: true,
+          fillColor: Cesium.Color.WHITE,
           stroke: true,
-          strokeWidth: 2,
+          strokeColor: blue,
+          strokeWidth: 4,
           padding: 5
         }), 
         rotation: Cesium.Math.toRadians(-15),
@@ -885,7 +987,7 @@
           new Cesium.Cartesian3(3514491.2325018044, 795128.5164504333, 5245125.452895022),
           new Cesium.Cartesian3(3515221.9848192064, 796841.9135994534, 5244380.707842256)
         ],
-        material: Cesium.Color.YELLOW.withAlpha(0.25)
+        material: blue.withAlpha(0.25)
       }
     });
 
@@ -897,17 +999,17 @@
         material: Cesium.Color.TRANSPARENT,
         height: 0.0,
         outline: true,
-        outlineColor: Cesium.Color.WHITE
+        outlineColor: blue
       },
     });
 
     /* Altitude icons - MAP VIEW - Copenhagen (CPH) */
 
     mapViewer.entities.add({
-      id: "504",
+      id: "#504",
       position: Cesium.Cartesian3.fromDegrees(8.97506, 57.19446),
       billboard: {
-        image: "icons/IAF2.png",
+        image: "icons/IAF.png",
         width: 32,
         height: 32,
       },
@@ -916,18 +1018,18 @@
         font: "14pt monospace",
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineColor: blue,
+        outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
       }
     });
 
     mapViewer.entities.add({
-      id: "519",
+      id: "#519",
       position: Cesium.Cartesian3.fromDegrees(11.51525, 56.27714),
       billboard: {
-        image: "icons/IAF2.png",
+        image: "icons/IAF.png",
         width: 32,
         height: 32,
       },
@@ -936,18 +1038,18 @@
         font: "14pt monospace",
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineColor: blue,
+        outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
       }
     });
 
     mapViewer.entities.add({
-      id: "564",
+      id: "#564",
       position: Cesium.Cartesian3.fromDegrees(12.80954, 55.77102),
       billboard: {
-        image: "icons/IAF2.png",
+        image: "icons/IAF.png",
         width: 32,
         height: 32,
       },
@@ -956,18 +1058,18 @@
         font: "14pt monospace",
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineColor: blue,
+        outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
       }
     });
 
     mapViewer.entities.add({
-      id: "571",
+      id: "#571",
       position: Cesium.Cartesian3.fromDegrees(12.78018, 55.69752),
       billboard: {
-        image: "icons/IF2.png",
+        image: "icons/IF.png",
         width: 32,
         height: 32,
       },
@@ -976,18 +1078,18 @@
         font: "14pt monospace",
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineColor: blue,
+        outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
       }
     });
 
     mapViewer.entities.add({
-      id: "575",
+      id: "#575",
       position: Cesium.Cartesian3.fromDegrees(12.727, 55.66365),
       billboard: {
-        image: "icons/FAF2.png",
+        image: "icons/FAF.png",
         width: 32,
         height: 32,
       },
@@ -996,8 +1098,8 @@
         font: "14pt monospace",
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineColor: blue,
+        outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
       }
@@ -1006,7 +1108,7 @@
     mapViewer.entities.add({
       position: Cesium.Cartesian3.fromRadians(0.22073653023897194, 0.9706177891789126),
       billboard: {
-        image: "icons/VOR-DME2.png",
+        image: "icons/VOR-DME.png",
         width: 40,
         height: 40,
       }
@@ -1019,8 +1121,11 @@
       billboard: {
         image: Cesium.writeTextToCanvas('205° \u{1F80A}', {
           font: '14pt monospace',
+          fill: true,
+          fillColor: Cesium.Color.WHITE,
           stroke: true,
-          strokeWidth: 2,
+          strokeColor: blue,
+          strokeWidth: 4,
           padding: 5
         }), 
         rotation: Cesium.Math.toRadians(-38),
@@ -1034,8 +1139,11 @@
       billboard: {
         image: Cesium.writeTextToCanvas('\u{1F808} 048°', {
           font: '14pt monospace',
+          fill: true,
+          fillColor: Cesium.Color.WHITE,
           stroke: true,
-          strokeWidth: 2,
+          strokeColor: blue,
+          strokeWidth: 4,
           padding: 5
         }), 
         rotation: Cesium.Math.toRadians(50),
@@ -1049,8 +1157,11 @@
       billboard: {
         image: Cesium.writeTextToCanvas('\u{1F808} 048°', {
           font: '14pt monospace',
+          fill: true,
+          fillColor: Cesium.Color.WHITE,
           stroke: true,
-          strokeWidth: 2,
+          strokeColor: blue,
+          strokeWidth: 4,
           padding: 5
         }), 
         rotation: Cesium.Math.toRadians(50),
@@ -1098,10 +1209,10 @@
     /* Altitude icons - PROFILE VIEW - Copenhagen (CPH) */
 
     profileViewer.entities.add({
-      id: "504",
+      id: "#504",
       position: Cesium.Cartesian3.fromDegrees(8.97506, 57.19446, 11321.91 * heightExaggeration),
       billboard: {
-        image: "icons/IAF2.png",
+        image: "icons/IAF.png",
         width: 32,
         height: 32,
       },
@@ -1110,8 +1221,8 @@
         font: "14pt monospace",
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineColor: blue,
+        outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
       }
@@ -1124,18 +1235,18 @@
           Cesium.Cartesian3.fromDegrees(8.97506, 57.19446, 11321.91 * heightExaggeration),
         ],
         material: new Cesium.PolylineDashMaterialProperty({
-          color: Cesium.Color.WHITE,
+          color: blue,
           dashLength: 8.0,
         }),
-        width: 1
+        width: 2
       }
     });
 
     profileViewer.entities.add({
-      id: "519",
+      id: "#519",
       position: Cesium.Cartesian3.fromDegrees(11.51525, 56.27714, 5200.91 * heightExaggeration),
       billboard: {
-        image: "icons/IAF2.png",
+        image: "icons/IAF.png",
         width: 32,
         height: 32,
       },
@@ -1144,8 +1255,8 @@
         font: "14pt monospace",
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineColor: blue,
+        outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
       }
@@ -1158,18 +1269,18 @@
           Cesium.Cartesian3.fromDegrees(11.51525, 56.27714, 5200.91 * heightExaggeration),
         ],
         material: new Cesium.PolylineDashMaterialProperty({
-          color: Cesium.Color.WHITE,
+          color: blue,
           dashLength: 8.0,
         }),
-        width: 1
+        width: 2
       }
     });
 
     profileViewer.entities.add({
-      id: "564",
+      id: "#564",
       position: Cesium.Cartesian3.fromDegrees(12.80954, 55.77102, 703.92 * heightExaggeration),
       billboard: {
-        image: "icons/IAF2.png",
+        image: "icons/IAF.png",
         width: 32,
         height: 32,
       },
@@ -1178,8 +1289,8 @@
         font: "14pt monospace",
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineColor: blue,
+        outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
       }
@@ -1192,18 +1303,18 @@
           Cesium.Cartesian3.fromDegrees(12.80954, 55.77102, 703.92 * heightExaggeration),
         ],
         material: new Cesium.PolylineDashMaterialProperty({
-          color: Cesium.Color.WHITE,
+          color: blue,
           dashLength: 8.0,
         }),
-        width: 1
+        width: 2
       }
     });
 
     profileViewer.entities.add({
-      id: "571",
+      id: "#571",
       position: Cesium.Cartesian3.fromDegrees(12.78018, 55.69752, 581.93 * heightExaggeration),
       billboard: {
-        image: "icons/IF2.png",
+        image: "icons/IF.png",
         width: 32,
         height: 32,
       },
@@ -1212,8 +1323,8 @@
         font: "14pt monospace",
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineColor: blue,
+        outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
       }
@@ -1226,18 +1337,18 @@
           Cesium.Cartesian3.fromDegrees(12.78018, 55.69752, 581.93 * heightExaggeration),
         ],
         material: new Cesium.PolylineDashMaterialProperty({
-          color: Cesium.Color.WHITE,
+          color: blue,
           dashLength: 8.0,
         }),
-        width: 1
+        width: 2
       }
     });
 
     profileViewer.entities.add({
-      id: "575",
+      id: "#575",
       position: Cesium.Cartesian3.fromDegrees(12.727, 55.66365, 307.61 * heightExaggeration),
       billboard: {
-        image: "icons/FAF2.png",
+        image: "icons/FAF.png",
         width: 32,
         height: 32,
       },
@@ -1246,8 +1357,8 @@
         font: "14pt monospace",
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineColor: blue,
+        outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
       }
@@ -1260,10 +1371,10 @@
           Cesium.Cartesian3.fromDegrees(12.727, 55.66365, 307.61 * heightExaggeration),
         ],
         material: new Cesium.PolylineDashMaterialProperty({
-          color: Cesium.Color.WHITE,
+          color: blue,
           dashLength: 8.0,
         }),
-        width: 1
+        width: 2
       }
     });
 
@@ -1274,8 +1385,11 @@
       billboard: {
         image: Cesium.writeTextToCanvas('205° \u{1F80A}', {
           font: '14pt monospace',
+          fill: true,
+          fillColor: Cesium.Color.WHITE,
           stroke: true,
-          strokeWidth: 2,
+          strokeColor: blue,
+          strokeWidth: 4,
           padding: 5
         }), 
         rotation: Cesium.Math.toRadians(-20),
@@ -1289,8 +1403,11 @@
       billboard: {
         image: Cesium.writeTextToCanvas('\u{1F808} 048°', {
           font: '14pt monospace',
+          fill: true,
+          fillColor: Cesium.Color.WHITE,
           stroke: true,
-          strokeWidth: 2,
+          strokeColor: blue,
+          strokeWidth: 4,
           padding: 5
         }), 
         rotation: Cesium.Math.toRadians(12),
@@ -1304,8 +1421,11 @@
       billboard: {
         image: Cesium.writeTextToCanvas('\u{1F808} 048°', {
           font: '14pt monospace',
+          fill: true,
+          fillColor: Cesium.Color.WHITE,
           stroke: true,
-          strokeWidth: 2,
+          strokeColor: blue,
+          strokeWidth: 4,
           padding: 5
         }),
         rotation: Cesium.Math.toRadians(12),
