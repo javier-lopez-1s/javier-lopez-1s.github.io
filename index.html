@@ -585,56 +585,50 @@
 
     mapViewer.entities.add({
       position: Cesium.Cartesian3.fromDegrees(-122.44339, 37.79173),
-      billboard: {
-        image: Cesium.writeTextToCanvas('\u{1F808} 143°', {
-          font: '14pt monospace',
-          fill: true,
-          fillColor: Cesium.Color.WHITE,
-          stroke: true,
-          strokeColor: blue,
-          strokeWidth: 4,
-          padding: 5
-        }), 
-        rotation: Cesium.Math.toRadians(42),
-        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-        pixelOffset: new Cesium.Cartesian2(-10, -10),
-      }
+      label: {
+        text: "143°",
+        font: "14pt monospace",
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: blue,
+        outlineWidth: 5,
+        showBackground: true,
+        backgroundColor: Cesium.Color.WHITE.withAlpha(0.5),
+        backgroundPadding: new Cesium.Cartesian2(6, 6),
+        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -1.0)
+      },
     });
 
     mapViewer.entities.add({
       position: Cesium.Cartesian3.fromDegrees(-122.47395, 37.66081),
-      billboard: {
-        image: Cesium.writeTextToCanvas('358° \u{1F80A}', {
-          font: '14pt monospace',
-          fill: true,
-          fillColor: Cesium.Color.WHITE,
-          stroke: true,
-          strokeColor: blue,
-          strokeWidth: 4,
-          padding: 5
-        }), 
-        rotation: Cesium.Math.toRadians(-30),
-        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-        pixelOffset: new Cesium.Cartesian2(0, -10),
-      }
+      label: {
+        text: "358°",
+        font: "14pt monospace",
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: blue,
+        outlineWidth: 5,
+        showBackground: true,
+        backgroundColor: Cesium.Color.WHITE.withAlpha(0.5),
+        backgroundPadding: new Cesium.Cartesian2(6, 6),
+        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -1.0)
+      },
     });
 
     mapViewer.entities.add({
       position: Cesium.Cartesian3.fromDegrees(-122.41457, 37.63623),
-      billboard: {
-        image: Cesium.writeTextToCanvas('358° \u{1F80A}', {
-          font: '14pt monospace',
-          fill: true,
-          fillColor: Cesium.Color.WHITE,
-          stroke: true,
-          strokeColor: blue,
-          strokeWidth: 4,
-          padding: 5
-        }), 
-        rotation: Cesium.Math.toRadians(-30),
-        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-        pixelOffset: new Cesium.Cartesian2(0, -10),
-      }
+      label: {
+        text: "358°",
+        font: "14pt monospace",
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: blue,
+        outlineWidth: 5,
+        showBackground: true,
+        backgroundColor: Cesium.Color.WHITE.withAlpha(0.5),
+        backgroundPadding: new Cesium.Cartesian2(6, 6),
+        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -1.0)
+      },
     });
 
     /* Localiser beams - PROFILE VIEW - San Francisco (SFO) */
@@ -891,56 +885,50 @@
 
     profileViewer.entities.add({
       position: Cesium.Cartesian3.fromDegrees(-122.44339, 37.79173, 1755.82 * heightExaggeration),
-      billboard: {
-        image: Cesium.writeTextToCanvas('\u{1F808} 143°', {
-          font: '14pt monospace',
-          fill: true,
-          fillColor: Cesium.Color.WHITE,
-          stroke: true,
-          strokeColor: blue,
-          strokeWidth: 4,
-          padding: 5
-        }), 
-        rotation: Cesium.Math.toRadians(15),
-        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-        pixelOffset: new Cesium.Cartesian2(0, -10),
-      }
+      label: {
+        text: "143°",
+        font: "14pt monospace",
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: blue,
+        outlineWidth: 5,
+        showBackground: true,
+        backgroundColor: Cesium.Color.WHITE.withAlpha(0.5),
+        backgroundPadding: new Cesium.Cartesian2(6, 6),
+        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -1000.0)
+      },
     });
 
     profileViewer.entities.add({
       position: Cesium.Cartesian3.fromDegrees(-122.47395, 37.66081, 803.15 * heightExaggeration),
-      billboard: {
-        image: Cesium.writeTextToCanvas('358° \u{1F80A}', {
-          font: '14pt monospace',
-          fill: true,
-          fillColor: Cesium.Color.WHITE,
-          stroke: true,
-          strokeColor: blue,
-          strokeWidth: 4,
-          padding: 5
-        }), 
-        rotation: Cesium.Math.toRadians(-15),
-        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-        pixelOffset: new Cesium.Cartesian2(0, -10),
-      }
+      label: {
+        text: "358°",
+        font: "14pt monospace",
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: blue,
+        outlineWidth: 5,
+        showBackground: true,
+        backgroundColor: Cesium.Color.WHITE.withAlpha(0.5),
+        backgroundPadding: new Cesium.Cartesian2(6, 6),
+        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -100.0)
+      },
     });
 
     profileViewer.entities.add({
       position: Cesium.Cartesian3.fromDegrees(-122.41457, 37.63623, 292.69 * heightExaggeration),
-      billboard: {
-        image: Cesium.writeTextToCanvas('358° \u{1F80A}', {
-          font: '14pt monospace',
-          fill: true,
-          fillColor: Cesium.Color.WHITE,
-          stroke: true,
-          strokeColor: blue,
-          strokeWidth: 4,
-          padding: 5
-        }), 
-        rotation: Cesium.Math.toRadians(-15),
-        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-        pixelOffset: new Cesium.Cartesian2(0, -10),
-      }
+      label: {
+        text: "358°",
+        font: "14pt monospace",
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: blue,
+        outlineWidth: 5,
+        showBackground: true,
+        backgroundColor: Cesium.Color.WHITE.withAlpha(0.5),
+        backgroundPadding: new Cesium.Cartesian2(6, 6),
+        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -100.0)
+      },
     });
 
     /* Localiser beams - MAP VIEW - Copenhagen (CPH) */
@@ -1118,56 +1106,50 @@
 
     mapViewer.entities.add({
       position: Cesium.Cartesian3.fromDegrees(12.46058, 55.91052),
-      billboard: {
-        image: Cesium.writeTextToCanvas('205° \u{1F80A}', {
-          font: '14pt monospace',
-          fill: true,
-          fillColor: Cesium.Color.WHITE,
-          stroke: true,
-          strokeColor: blue,
-          strokeWidth: 4,
-          padding: 5
-        }), 
-        rotation: Cesium.Math.toRadians(-38),
-        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-        pixelOffset: new Cesium.Cartesian2(-20, -20),
-      }
+      label: {
+        text: "205°",
+        font: "14pt monospace",
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: blue,
+        outlineWidth: 5,
+        showBackground: true,
+        backgroundColor: Cesium.Color.WHITE.withAlpha(0.5),
+        backgroundPadding: new Cesium.Cartesian2(6, 6),
+        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -100.0)
+      },
     });
 
     mapViewer.entities.add({
       position: Cesium.Cartesian3.fromDegrees(12.75097, 55.67903),
-      billboard: {
-        image: Cesium.writeTextToCanvas('\u{1F808} 048°', {
-          font: '14pt monospace',
-          fill: true,
-          fillColor: Cesium.Color.WHITE,
-          stroke: true,
-          strokeColor: blue,
-          strokeWidth: 4,
-          padding: 5
-        }), 
-        rotation: Cesium.Math.toRadians(50),
-        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-        pixelOffset: new Cesium.Cartesian2(-12, 0),
-      }
+      label: {
+        text: "048°",
+        font: "14pt monospace",
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: blue,
+        outlineWidth: 5,
+        showBackground: true,
+        backgroundColor: Cesium.Color.WHITE.withAlpha(0.5),
+        backgroundPadding: new Cesium.Cartesian2(6, 6),
+        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -100.0)
+      },
     });
 
     mapViewer.entities.add({
       position: Cesium.Cartesian3.fromDegrees(12.6853, 55.63683),
-      billboard: {
-        image: Cesium.writeTextToCanvas('\u{1F808} 048°', {
-          font: '14pt monospace',
-          fill: true,
-          fillColor: Cesium.Color.WHITE,
-          stroke: true,
-          strokeColor: blue,
-          strokeWidth: 4,
-          padding: 5
-        }), 
-        rotation: Cesium.Math.toRadians(50),
-        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-        pixelOffset: new Cesium.Cartesian2(-40, 30),
-      }
+      label: {
+        text: "048°",
+        font: "14pt monospace",
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: blue,
+        outlineWidth: 5,
+        showBackground: true,
+        backgroundColor: Cesium.Color.WHITE.withAlpha(0.5),
+        backgroundPadding: new Cesium.Cartesian2(6, 6),
+        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -100.0)
+      },
     });
 
     /* Localiser beams - PROFILE VIEW - Copenhagen (CPH) */
