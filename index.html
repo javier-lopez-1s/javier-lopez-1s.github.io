@@ -111,6 +111,189 @@
   </div>
   <script type="module">
 
+    /* Classes */
+
+    class GeoJsonByBoundingBoxDataSource extends Cesium.GeoJsonDataSource {
+
+      ABORT_REASON = "Request cancelled";
+      #controller;
+      #fetchOptions;
+      #options;
+      #loadedRectangle;
+      #urlTemplate;
+
+      constructor(name, urlTemplate, visible, options, fetchOptions) {
+        super(name);
+        this.#urlTemplate = urlTemplate;
+        this.show = visible;
+        this.#options = options;
+        this.#fetchOptions = fetchOptions;
+        this.#controller = new AbortController();
+        this.#loadedRectangle = new Cesium.Rectangle();
+      }
+
+      onCameraMoveStart() {
+        if (this.show) {
+          this.cancelRequest();
+        }
+      }
+
+      onCameraMoveEnd(rectangle) {
+        if (this.show) {
+          this.refresh(rectangle);
+        }
+      }
+
+      setVisibility(visible, rectangle) {
+        if (this.show === visible) return;
+        this.show = visible;
+        if (visible) {
+          this.refresh(rectangle);
+        } else {
+          this.cancelRequest();
+        }
+      }
+
+      cancelRequest() {
+        this.#controller.abort(this.ABORT_REASON); // Cancel pending request.
+        this.#controller = new AbortController(); // Reset aborted state.
+      }
+
+      clear() {
+        this.entities.removeAll();
+        this.#loadedRectangle = new Cesium.Rectangle();
+      }
+
+      refresh(rectangle) {
+        if (this.contains(this.#loadedRectangle, rectangle)) return; // The already loaded rectangle contains the current one.
+        if (this.equals(rectangle, Cesium.Rectangle.MAX_VALUE)) { // Prevent loading the whole dataset. Loaded data is removed to avoid showing empty areas. 
+          this.clear();
+          return;
+        }
+        this.loadBoundingBox(rectangle);
+      }
+
+      async loadBoundingBox(rectangle) {
+        const extent = [rectangle.west, rectangle.south, rectangle.east, rectangle.north].map(c => Cesium.Math.toDegrees(c)).join();
+        // const extent = [rectangle.south, rectangle.west, rectangle.north, rectangle.east].map(c => Cesium.Math.toDegrees(c)).join(); // For GeoServer WFS example
+        const url = this.#urlTemplate.replace("{bbox}", extent);
+        if (this.#fetchOptions) {
+          this.#fetchOptions.signal = this.#controller.signal;
+        } else {
+          this.#fetchOptions = { signal: this.#controller.signal };
+        }
+        
+        fetch(url, this.#fetchOptions)
+        .then(response => {
+          if (response.ok) {
+            return response.json();
+          } else {
+            return Promise.reject(new Error(`${response.status} ${response.statusText}`));
+          }
+        })
+        .then(data => {
+          this.clear(); // Workaround for the bug https://github.com/CesiumGS/cesium/issues/2891
+          return this.load(data, this.#options);
+        })
+        .then(() => {
+          this.#loadedRectangle = rectangle;
+
+          const entities = this.entities.values;
+          for (let i = 0; i < entities.length; i++) {
+            entities[i].polygon.height = -1000; // This prevents the flight path line from getting displayed below the boundaries.
+            // entities[i].polygon.distanceDisplayCondition = new Cesium.DistanceDisplayCondition(0, 100000);
+          }
+        })
+        .catch(error => {
+          if (typeof error == "string") console.error(error);
+          else if (error instanceof Error) console.error(error.message);
+          else console.error("Unknown error while loading GeoJsonByBoundingBoxDataSource");
+        });
+      }
+
+      contains(r1, r2) {
+        return r1.west <= r2.west && r1.south <= r2.south && r1.east >= r2.east && r1.north >= r2.north;
+      }
+
+      equals(r1, r2) {
+        return r1.west === r2.west && r1.south === r2.south && r1.east === r2.east && r1.north === r2.north;
+      }
+
+      destroy() {
+        this.cancelRequest();
+        this.clear();
+      }
+    }
+
+    class CustomViewer extends Cesium.Viewer {
+      #unlistenMoveStart;
+      #unlistenMoveEnd;
+      
+      constructor(container, options) {
+        super(container, options);
+        this.#unlistenMoveStart = this.camera.moveStart.addEventListener(() => this.onMoveStart());
+        this.#unlistenMoveEnd = this.camera.moveEnd.addEventListener(() => this.onMoveEnd());
+      }
+
+      onMoveStart() {
+        for (let i = 0; i < this.dataSources.length; i++) {
+          const dataSource = this.dataSources.get(i);
+          if (dataSource instanceof GeoJsonByBoundingBoxDataSource) {
+            dataSource.onCameraMoveStart();
+          }
+        }
+      }
+
+      onMoveEnd() {
+        const distanceToCamera = this.camera.positionCartographic.height;
+        const threshold = 1000000;
+
+        const  baseLayer = this.scene.imageryLayers.get(0);
+        if (distanceToCamera > threshold) {
+          if (!baseLayer.show) {
+            baseLayer.show = true;
+          }
+        } else {
+          if (baseLayer.show) {
+            baseLayer.show = false;
+          }          
+        }
+
+        const  boundaries = this.dataSources.get(0);
+        if (distanceToCamera > threshold) {
+          if (boundaries.show) {
+            boundaries.show = false;
+          }
+        } else {
+          if (!boundaries.show) {
+            boundaries.show = true;
+          }          
+        }
+
+        const rectangle = this.camera.computeViewRectangle(); // Approximate visible rectangle on the ellipsoid.
+        if (rectangle) {
+          for (let i = 0; i < this.dataSources.length; i++) {
+            const dataSource = this.dataSources.get(i);
+            if (dataSource instanceof GeoJsonByBoundingBoxDataSource) {
+              dataSource.onCameraMoveEnd(rectangle);
+            }
+          }
+        }
+      }
+
+      destroy() {
+        this.#unlistenMoveStart();
+        this.#unlistenMoveEnd();
+        for (let i = 0; i < this.dataSources.length; i++) {
+          const dataSource = this.dataSources.get(i);
+          if (dataSource instanceof GeoJsonByBoundingBoxDataSource) {
+            dataSource.destroy();
+          }
+        }
+        super.destroy();
+      }
+    }
+
     /* Utils */
 
     function getRotationMatrix(origin, destination) {
@@ -232,7 +415,7 @@
       PageDown: false
     };
 
-    const mapViewer = new Cesium.Viewer('mapViewContainer', {
+    const mapViewer = new CustomViewer('mapViewContainer', {
       animation: false,
       baseLayerPicker: false,
       fullscreenButton: false,
@@ -250,6 +433,8 @@
       skyBox: false,
       skyAtmosphere: false
     });
+
+    // mapViewer.scene.imageryLayers.removeAll(); // This removes the NaturalEarthII basemap
 
     const profileViewer = new Cesium.Viewer('profileViewContainer', {
       animation: false,
@@ -274,15 +459,20 @@
       profileViewer.camera.switchToOrthographicFrustum();
     }
 
-    // const osm = new Cesium.OpenStreetMapImageryProvider({
-    //   url : 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/'
-    // });
-    const positron = new Cesium.UrlTemplateImageryProvider({
-      url : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-      credit : 'Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL.'
-    });
-    mapViewer.imageryLayers.addImageryProvider(positron);
-    profileViewer.imageryLayers.addImageryProvider(positron);
+    mapViewer.dataSources.add(new GeoJsonByBoundingBoxDataSource(
+      "World_Countries",
+      "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/World_Countries/FeatureServer/0/query?f=geojson&geometryType=esriGeometryEnvelope&geometry={bbox}&spatialRel=esriSpatialRelIntersects&defaultSR=4326&outFields=*",
+      true,
+      {
+        fill: Cesium.Color.PERU.withAlpha(0.99), // https://community.cesium.com/t/polygon-outline-display-problem-on-small-scale/5599/3
+        stroke: Cesium.Color.BLACK.withAlpha(0.99), // https://community.cesium.com/t/polygon-outline-display-problem-on-small-scale/5599/3
+        strokeWidth: 5,
+        clampToGround: false
+      }
+    ));
+
+    mapViewer.scene.globe.baseColor = Cesium.Color.DEEPSKYBLUE; // Earth's background Color
+    profileViewer.scene.backgroundColor = Cesium.Color.WHITESMOKE; // Sky's background Color
 
     mapViewer.scene.screenSpaceCameraController.enableTilt = false;
     mapViewer.scene.screenSpaceCameraController.enableLook = false;
@@ -292,8 +482,6 @@
     profileViewer.scene.screenSpaceCameraController.enableZoom = false;
     profileViewer.scene.screenSpaceCameraController.enableTilt = false;
     profileViewer.scene.screenSpaceCameraController.enableLook = false;
-
-    profileViewer.scene.backgroundColor = Cesium.Color.WHITESMOKE;
 
 
     mapViewer.entities.suspendEvents();
@@ -454,7 +642,8 @@
           new Cesium.Cartesian3(-2714143.76148828, -4266152.212080948, 3874638.2635467057),
           new Cesium.Cartesian3(-2713116.459217673, -4265846.688825203, 3875686.9145580647)
         ],
-        material:blue.withAlpha(0.25)
+        material:blue.withAlpha(0.25),
+        height: 0 // This prevents the Localiser beam polygon from getting displayed below the boundaries.
       }
     });
 
@@ -479,6 +668,7 @@
         image: "icons/IAF.png",
         width: 32,
         height: 32,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       },
       label: {
         text: "21289",
@@ -489,6 +679,7 @@
         outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       }
     });
 
@@ -499,6 +690,7 @@
         image: "icons/IAF.png",
         width: 32,
         height: 32,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       },
       label: {
         text: "10136",
@@ -509,6 +701,7 @@
         outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       }
     });
 
@@ -519,6 +712,7 @@
         image: "icons/IAF.png",
         width: 32,
         height: 32,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       },
       label: {
         text: "4085",
@@ -529,6 +723,7 @@
         outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       }
     });
 
@@ -539,6 +734,7 @@
         image: "icons/IF.png",
         width: 32,
         height: 32,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       },
       label: {
         text: "IF\n3182",
@@ -549,6 +745,7 @@
         outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       }
     });
 
@@ -559,6 +756,7 @@
         image: "icons/FAF.png",
         width: 32,
         height: 32,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       },
       label: {
         text: "FAF\n1910",
@@ -569,6 +767,7 @@
         outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       }
     });
 
@@ -578,6 +777,7 @@
         image: "icons/VOR-DME.png",
         width: 40,
         height: 40,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       }
     });
 
@@ -593,9 +793,10 @@
         outlineColor: blue,
         outlineWidth: 5,
         showBackground: true,
-        backgroundColor: Cesium.Color.WHITE.withAlpha(0.5),
+        backgroundColor: Cesium.Color.LIGHTGRAY,
         backgroundPadding: new Cesium.Cartesian2(6, 6),
-        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -1.0)
+        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -1.0),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       },
     });
 
@@ -609,9 +810,10 @@
         outlineColor: blue,
         outlineWidth: 5,
         showBackground: true,
-        backgroundColor: Cesium.Color.WHITE.withAlpha(0.5),
+        backgroundColor: Cesium.Color.LIGHTGRAY,
         backgroundPadding: new Cesium.Cartesian2(6, 6),
-        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -1.0)
+        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -1.0),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       },
     });
 
@@ -625,9 +827,10 @@
         outlineColor: blue,
         outlineWidth: 5,
         showBackground: true,
-        backgroundColor: Cesium.Color.WHITE.withAlpha(0.5),
+        backgroundColor: Cesium.Color.LIGHTGRAY,
         backgroundPadding: new Cesium.Cartesian2(6, 6),
-        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -1.0)
+        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -1.0),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       },
     });
 
@@ -893,7 +1096,7 @@
         outlineColor: blue,
         outlineWidth: 5,
         showBackground: true,
-        backgroundColor: Cesium.Color.WHITE.withAlpha(0.5),
+        backgroundColor: Cesium.Color.LIGHTGRAY,
         backgroundPadding: new Cesium.Cartesian2(6, 6),
         eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -1000.0)
       },
@@ -909,7 +1112,7 @@
         outlineColor: blue,
         outlineWidth: 5,
         showBackground: true,
-        backgroundColor: Cesium.Color.WHITE.withAlpha(0.5),
+        backgroundColor: Cesium.Color.LIGHTGRAY,
         backgroundPadding: new Cesium.Cartesian2(6, 6),
         eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -100.0)
       },
@@ -925,7 +1128,7 @@
         outlineColor: blue,
         outlineWidth: 5,
         showBackground: true,
-        backgroundColor: Cesium.Color.WHITE.withAlpha(0.5),
+        backgroundColor: Cesium.Color.LIGHTGRAY,
         backgroundPadding: new Cesium.Cartesian2(6, 6),
         eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -100.0)
       },
@@ -975,7 +1178,8 @@
           new Cesium.Cartesian3(3514491.2325018044, 795128.5164504333, 5245125.452895022),
           new Cesium.Cartesian3(3515221.9848192064, 796841.9135994534, 5244380.707842256)
         ],
-        material: blue.withAlpha(0.25)
+        material: blue.withAlpha(0.25),
+        height: 0 // This prevents the Localiser beam polygon from getting displayed below the boundaries.
       }
     });
 
@@ -1000,6 +1204,7 @@
         image: "icons/IAF.png",
         width: 32,
         height: 32,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       },
       label: {
         text: "37145",
@@ -1010,6 +1215,7 @@
         outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       }
     });
 
@@ -1020,6 +1226,7 @@
         image: "icons/IAF.png",
         width: 32,
         height: 32,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       },
       label: {
         text: "17063",
@@ -1030,6 +1237,7 @@
         outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       }
     });
 
@@ -1040,6 +1248,7 @@
         image: "icons/IAF.png",
         width: 32,
         height: 32,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       },
       label: {
         text: "2309",
@@ -1050,6 +1259,7 @@
         outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       }
     });
 
@@ -1060,6 +1270,7 @@
         image: "icons/IF.png",
         width: 32,
         height: 32,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       },
       label: {
         text: "IF\n1909",
@@ -1070,6 +1281,7 @@
         outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       }
     });
 
@@ -1080,6 +1292,7 @@
         image: "icons/FAF.png",
         width: 32,
         height: 32,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       },
       label: {
         text: "FAF\n1010",
@@ -1090,6 +1303,7 @@
         outlineWidth: 5,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         pixelOffset: new Cesium.Cartesian2(0, -20),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       }
     });
 
@@ -1099,6 +1313,7 @@
         image: "icons/VOR-DME.png",
         width: 40,
         height: 40,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       }
     });
 
@@ -1114,9 +1329,10 @@
         outlineColor: blue,
         outlineWidth: 5,
         showBackground: true,
-        backgroundColor: Cesium.Color.WHITE.withAlpha(0.5),
+        backgroundColor: Cesium.Color.LIGHTGRAY,
         backgroundPadding: new Cesium.Cartesian2(6, 6),
-        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -100.0)
+        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -100.0),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       },
     });
 
@@ -1130,9 +1346,10 @@
         outlineColor: blue,
         outlineWidth: 5,
         showBackground: true,
-        backgroundColor: Cesium.Color.WHITE.withAlpha(0.5),
+        backgroundColor: Cesium.Color.LIGHTGRAY,
         backgroundPadding: new Cesium.Cartesian2(6, 6),
-        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -100.0)
+        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -100.0),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       },
     });
 
@@ -1146,9 +1363,10 @@
         outlineColor: blue,
         outlineWidth: 5,
         showBackground: true,
-        backgroundColor: Cesium.Color.WHITE.withAlpha(0.5),
+        backgroundColor: Cesium.Color.LIGHTGRAY,
         backgroundPadding: new Cesium.Cartesian2(6, 6),
-        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -100.0)
+        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, -100.0),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       },
     });
 
